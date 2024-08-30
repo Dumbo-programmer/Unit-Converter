@@ -5,8 +5,6 @@ from PyQt5.QtCore import Qt
 class UnitConverter(QWidget):
     def __init__(self):
         super().__init__()
-
-        # Define UI elements
         self.initUI()
 
     def initUI(self):
@@ -54,6 +52,43 @@ class UnitConverter(QWidget):
         # Window settings
         self.setWindowTitle('Unit Converter')
         self.setGeometry(100, 100, 400, 200)
+        
+        # Apply dark and teal theme
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2E2E2E;  # Dark background
+                color: #E0E0E0;            # Light text
+                font-family: Arial;
+                font-size: 14px;
+            }
+            QLabel {
+                color: #E0E0E0;
+            }
+            QLineEdit {
+                background-color: #3D3D3D;  # Darker input background
+                color: #E0E0E0;
+                border: 1px solid #008080;  # Teal border
+                border-radius: 5px;
+                padding: 5px;
+            }
+            QPushButton {
+                background-color: #008080;  # Teal background
+                color: #E0E0E0;
+                border: 1px solid #006666;  # Darker teal border
+                border-radius: 5px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: #004d4d;  # Darker teal on hover
+            }
+            QComboBox {
+                background-color: #3D3D3D;  # Dark background
+                color: #E0E0E0;
+                border: 1px solid #008080;  # Teal border
+                border-radius: 5px;
+                padding: 5px;
+            }
+        """)
 
     def convert_units(self):
         try:
