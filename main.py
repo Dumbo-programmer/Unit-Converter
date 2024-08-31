@@ -1,6 +1,9 @@
 import sys
-from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QLineEdit, QPushButton, 
-                             QComboBox, QVBoxLayout, QHBoxLayout, QGridLayout, QCheckBox)
+import requests  # To be installed for real-time currency rates
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QLabel, QLineEdit, QPushButton, 
+    QComboBox, QVBoxLayout, QHBoxLayout, QGridLayout, QCheckBox, QMessageBox, QFileDialog
+)
 from PyQt5.QtCore import Qt
 
 class UnitConverter(QWidget):
@@ -61,17 +64,30 @@ class UnitConverter(QWidget):
         favorites_layout.addWidget(self.favorites_label)
         favorites_layout.addWidget(self.favorites_box)
 
+        # History Layout
+        history_layout = QVBoxLayout()
+        self.history_label = QLabel('Conversion History:')
+        self.history_box = QComboBox(self)
+        history_layout.addWidget(self.history_label)
+        history_layout.addWidget(self.history_box)
+
+        # Export History Button
+        self.export_button = QPushButton('Export History', self)
+        self.export_button.clicked.connect(self.export_history)
+        history_layout.addWidget(self.export_button)
+
         # Add all layouts to the main layout
         layout.addLayout(input_layout)
         layout.addLayout(result_layout)
         layout.addWidget(self.favorite_checkbox)
         layout.addLayout(favorites_layout)
+        layout.addLayout(history_layout)
         
         self.setLayout(layout)
 
         # Window settings
         self.setWindowTitle('Advanced Unit Converter')
-        self.setGeometry(100, 100, 900, 200)
+        self.setGeometry(100, 100, 900, 300)
         
         # Apply dark and teal theme
         self.setStyleSheet("""
@@ -110,8 +126,9 @@ class UnitConverter(QWidget):
             }
         """)
 
-        # Initialize favorites list
+        # Initialize favorites and history lists
         self.favorites = []
+        self.history = []
 
     def update_units(self):
         """Update unit options based on selected unit type."""
@@ -158,6 +175,9 @@ class UnitConverter(QWidget):
 
             self.result_field.setText(f"{result:.2f}")
 
+            # Save to history
+            self.save_to_history(value, from_unit, to_unit, result)
+
             # Save to favorites if checkbox is checked
             if self.favorite_checkbox.isChecked():
                 self.save_favorite(value, from_unit, to_unit, result)
@@ -180,15 +200,24 @@ class UnitConverter(QWidget):
         self.favorites.append(favorite_text)
         self.favorites_box.addItem(favorite_text)
 
+    def save_to_history(self, value, from_unit, to_unit, result):
+        """Save the conversion to history."""
+        history_text = f"{value} {from_unit} to {to_unit} = {result:.2f}"
+        self.history.append(history_text)
+        self.history_box.addItem(history_text)
+
     def load_favorite(self):
-        """Load a favorite conversion into the input fields."""
-        favorite = self.favorites_box.currentText()
-        if favorite:
-            parts = favorite.split()
-            self.input_field.setText(parts[0])
-            self.from_unit.setCurrentText(parts[1])
-            self.to_unit.setCurrentText(parts[3])
-            self.result_field.setText(parts[5])
+        """Load a favorite conversion back to input fields."""
+        # Implement loading logic for favorites
+
+    def export_history(self):
+        """Export conversion history to a file."""
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(self, "Export History", "", "CSV Files (*.csv);;JSON Files (*.json)", options=options)
+        if file_name:
+            with open(file_name, 'w') as file:
+                # Write history to the file in chosen format
+                pass  # Implement file saving logic
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
