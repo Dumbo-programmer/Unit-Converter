@@ -1,6 +1,6 @@
-# Ultimate Unit Converter
+# Batman's Unit Converter
 
-The **Ultimate Unit Converter** is a comprehensive, multi-functional desktop application built using Python and PyQt5. It provides various unit conversion tools, advanced features like AI-based suggestions, scientific calculator integration, AR measurement capabilities, and macro recording for automated tasks. This application combines a user-friendly interface with robust functionality to enhance productivity and ease of use.
+The **Batman's Unit Converter** is a multi-functional application built using Python and PyQt5. It provides various unit conversion tools, advanced features like AI-based suggestions, scientific calculator integration, AR measurement capabilities, and macro recording for automated tasks. This application combines a user-friendly interface with robust functionality
 
 ## Features
 
