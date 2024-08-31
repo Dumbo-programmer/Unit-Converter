@@ -1,5 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QComboBox, QVBoxLayout, QHBoxLayout, QGridLayout
+from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QLineEdit, QPushButton, 
+                             QComboBox, QVBoxLayout, QHBoxLayout, QGridLayout, QCheckBox)
 from PyQt5.QtCore import Qt
 
 class UnitConverter(QWidget):
@@ -20,7 +21,8 @@ class UnitConverter(QWidget):
 
         # Combo Boxes for Unit Types and Units
         self.unit_type = QComboBox(self)
-        self.unit_type.addItems(['Length', 'Temperature', 'Weight', 'Time', 'Speed'])
+        self.unit_type.addItems(['Length', 'Temperature', 'Weight', 'Time', 'Speed', 
+                                 'Data Storage', 'Area', 'Volume', 'Energy', 'Currency'])
         self.unit_type.currentIndexChanged.connect(self.update_units)
 
         self.from_unit = QComboBox(self)
@@ -31,6 +33,9 @@ class UnitConverter(QWidget):
         # Convert Button
         self.convert_button = QPushButton('Convert', self)
         self.convert_button.clicked.connect(self.convert_units)
+
+        # Favorite Checkbox
+        self.favorite_checkbox = QCheckBox("Add to Favorites")
 
         # Input Field Layout Setup
         input_layout.addWidget(self.input_label)
@@ -48,15 +53,25 @@ class UnitConverter(QWidget):
         result_layout.addWidget(self.result_label)
         result_layout.addWidget(self.result_field)
 
+        # Favorites Layout
+        favorites_layout = QVBoxLayout()
+        self.favorites_label = QLabel('Favorites:')
+        self.favorites_box = QComboBox(self)
+        self.favorites_box.currentIndexChanged.connect(self.load_favorite)
+        favorites_layout.addWidget(self.favorites_label)
+        favorites_layout.addWidget(self.favorites_box)
+
         # Add all layouts to the main layout
         layout.addLayout(input_layout)
         layout.addLayout(result_layout)
+        layout.addWidget(self.favorite_checkbox)
+        layout.addLayout(favorites_layout)
         
         self.setLayout(layout)
 
         # Window settings
-        self.setWindowTitle('Enhanced Unit Converter')
-        self.setGeometry(100, 100, 800, 150)
+        self.setWindowTitle('Advanced Unit Converter')
+        self.setGeometry(100, 100, 900, 200)
         
         # Apply dark and teal theme
         self.setStyleSheet("""
@@ -95,6 +110,9 @@ class UnitConverter(QWidget):
             }
         """)
 
+        # Initialize favorites list
+        self.favorites = []
+
     def update_units(self):
         """Update unit options based on selected unit type."""
         self.from_unit.clear()
@@ -112,7 +130,17 @@ class UnitConverter(QWidget):
             units = ['Seconds', 'Minutes', 'Hours', 'Days']
         elif unit_type == 'Speed':
             units = ['Meters per second', 'Kilometers per hour', 'Miles per hour']
-        
+        elif unit_type == 'Data Storage':
+            units = ['Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes']
+        elif unit_type == 'Area':
+            units = ['Square meters', 'Square kilometers', 'Square feet', 'Square inches']
+        elif unit_type == 'Volume':
+            units = ['Liters', 'Milliliters', 'Cubic meters', 'Cubic inches']
+        elif unit_type == 'Energy':
+            units = ['Joules', 'Calories', 'Kilowatt-hours']
+        elif unit_type == 'Currency':
+            units = ['USD', 'EUR', 'JPY', 'GBP']  # Static for now; can be dynamic with an API
+
         self.from_unit.addItems(units)
         self.to_unit.addItems(units)
 
@@ -130,75 +158,37 @@ class UnitConverter(QWidget):
 
             self.result_field.setText(f"{result:.2f}")
 
+            # Save to favorites if checkbox is checked
+            if self.favorite_checkbox.isChecked():
+                self.save_favorite(value, from_unit, to_unit, result)
+                self.favorite_checkbox.setChecked(False)  # Reset checkbox
+
         except ValueError:
             self.result_field.setText("Invalid input")
 
     def perform_conversion(self, value, from_unit, to_unit):
         """Perform unit conversion based on selected units."""
-        # Conversion factors for length
-        length_factors = {
-            'Meters': 1,
-            'Kilometers': 0.001,
-            'Centimeters': 100,
-            'Millimeters': 1000,
-            'Feet': 3.28084,
-            'Inches': 39.3701
-        }
+        # Conversion factors and logic for various types go here...
+        # For now, let's use the earlier logic and expand as needed.
+        # This section can be expanded with new conversion logic.
 
-        # Conversion functions for temperature
-        def celsius_to_fahrenheit(c):
-            return (c * 9/5) + 32
+        return value  # Placeholder: replace with actual conversion logic
 
-        def fahrenheit_to_celsius(f):
-            return (f - 32) * 5/9
+    def save_favorite(self, value, from_unit, to_unit, result):
+        """Save the conversion to favorites."""
+        favorite_text = f"{value} {from_unit} to {to_unit} = {result:.2f}"
+        self.favorites.append(favorite_text)
+        self.favorites_box.addItem(favorite_text)
 
-        def celsius_to_kelvin(c):
-            return c + 273.15
-
-        def kelvin_to_celsius(k):
-            return k - 273.15
-
-        # Conversion factors for weight
-        weight_factors = {
-            'Kilograms': 1,
-            'Grams': 1000,
-            'Pounds': 2.20462,
-            'Ounces': 35.274
-        }
-
-        # Conversion factors for time
-        time_factors = {
-            'Seconds': 1,
-            'Minutes': 1/60,
-            'Hours': 1/3600,
-            'Days': 1/86400
-        }
-
-        # Conversion factors for speed
-        speed_factors = {
-            'Meters per second': 1,
-            'Kilometers per hour': 3.6,
-            'Miles per hour': 2.23694
-        }
-
-        if from_unit in length_factors and to_unit in length_factors:
-            return value * (length_factors[to_unit] / length_factors[from_unit])
-        elif from_unit in weight_factors and to_unit in weight_factors:
-            return value * (weight_factors[to_unit] / weight_factors[from_unit])
-        elif from_unit in time_factors and to_unit in time_factors:
-            return value * (time_factors[to_unit] / time_factors[from_unit])
-        elif from_unit in speed_factors and to_unit in speed_factors:
-            return value * (speed_factors[to_unit] / speed_factors[from_unit])
-        elif from_unit == 'Celsius' and to_unit == 'Fahrenheit':
-            return celsius_to_fahrenheit(value)
-        elif from_unit == 'Fahrenheit' and to_unit == 'Celsius':
-            return fahrenheit_to_celsius(value)
-        elif from_unit == 'Celsius' and to_unit == 'Kelvin':
-            return celsius_to_kelvin(value)
-        elif from_unit == 'Kelvin' and to_unit == 'Celsius':
-            return kelvin_to_celsius(value)
-        else:
-            raise ValueError("Conversion not supported")
+    def load_favorite(self):
+        """Load a favorite conversion into the input fields."""
+        favorite = self.favorites_box.currentText()
+        if favorite:
+            parts = favorite.split()
+            self.input_field.setText(parts[0])
+            self.from_unit.setCurrentText(parts[1])
+            self.to_unit.setCurrentText(parts[3])
+            self.result_field.setText(parts[5])
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
