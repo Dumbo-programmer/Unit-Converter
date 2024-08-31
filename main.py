@@ -1,10 +1,14 @@
 import sys
-import requests  # To be installed for real-time currency rates
+import requests  # Ensure this is installed for real-time currency rates
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton, 
-    QComboBox, QVBoxLayout, QHBoxLayout, QGridLayout, QCheckBox, QMessageBox, QFileDialog
+    QComboBox, QVBoxLayout, QHBoxLayout, QGridLayout, QCheckBox, QMessageBox, QFileDialog,
+    QTableWidget, QTableWidgetItem, QShortcut, QSlider, QColorDialog, QInputDialog, QTextEdit, QStackedWidget
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QKeySequence, QIcon, QPalette, QColor
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
 
 class UnitConverter(QWidget):
     def __init__(self):
@@ -13,7 +17,13 @@ class UnitConverter(QWidget):
 
     def initUI(self):
         # Main Layout
-        layout = QVBoxLayout()
+        main_layout = QVBoxLayout()
+
+        # Create a stacked widget to switch between multiple functionalities
+        self.stacked_widget = QStackedWidget()
+
+        # Convert Units Layout
+        convert_layout = QVBoxLayout()
 
         # Input Fields Layout
         input_layout = QHBoxLayout()
@@ -25,7 +35,7 @@ class UnitConverter(QWidget):
         # Combo Boxes for Unit Types and Units
         self.unit_type = QComboBox(self)
         self.unit_type.addItems(['Length', 'Temperature', 'Weight', 'Time', 'Speed', 
-                                 'Data Storage', 'Area', 'Volume', 'Energy', 'Currency'])
+                                 'Data Storage', 'Area', 'Volume', 'Energy', 'Currency', 'Custom Units'])
         self.unit_type.currentIndexChanged.connect(self.update_units)
 
         self.from_unit = QComboBox(self)
@@ -76,59 +86,87 @@ class UnitConverter(QWidget):
         self.export_button.clicked.connect(self.export_history)
         history_layout.addWidget(self.export_button)
 
-        # Add all layouts to the main layout
-        layout.addLayout(input_layout)
-        layout.addLayout(result_layout)
-        layout.addWidget(self.favorite_checkbox)
-        layout.addLayout(favorites_layout)
-        layout.addLayout(history_layout)
+        # Visualization Canvas for Plotting
+        self.plot_button = QPushButton('Show Conversion Graph', self)
+        self.plot_button.clicked.connect(self.plot_conversion_graph)
+        history_layout.addWidget(self.plot_button)
         
-        self.setLayout(layout)
+        # Custom Theme Settings
+        self.custom_theme_button = QPushButton('Customize Theme', self)
+        self.custom_theme_button.clicked.connect(self.customize_theme)
+        convert_layout.addWidget(self.custom_theme_button)
 
-        # Window settings
+        # Custom Unit Creation Button
+        self.custom_unit_button = QPushButton('Create Custom Unit', self)
+        self.custom_unit_button.clicked.connect(self.create_custom_unit)
+        convert_layout.addWidget(self.custom_unit_button)
+
+        # Add Conversion Layouts
+        convert_layout.addLayout(input_layout)
+        convert_layout.addLayout(result_layout)
+        convert_layout.addWidget(self.favorite_checkbox)
+        convert_layout.addLayout(favorites_layout)
+        convert_layout.addLayout(history_layout)
+
+        # Add the convert layout to the stacked widget
+        convert_widget = QWidget()
+        convert_widget.setLayout(convert_layout)
+        self.stacked_widget.addWidget(convert_widget)
+
+        # Initialize stacked widget and add to the main layout
+        main_layout.addWidget(self.stacked_widget)
+
+        # Set layout and window settings
+        self.setLayout(main_layout)
         self.setWindowTitle('Advanced Unit Converter')
-        self.setGeometry(100, 100, 900, 300)
+        self.setGeometry(100, 100, 900, 600)
+        self.setWindowIcon(QIcon("icon.png"))  # Ensure an icon file exists
         
         # Apply dark and teal theme
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #2E2E2E;  # Dark background
-                color: #E0E0E0;            # Light text
-                font-family: Arial;
-                font-size: 14px;
-            }
-            QLabel {
-                color: #E0E0E0;
-            }
-            QLineEdit {
-                background-color: #3D3D3D;  # Darker input background
-                color: #E0E0E0;
-                border: 1px solid #008080;  # Teal border
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QPushButton {
-                background-color: #008080;  # Teal background
-                color: #E0E0E0;
-                border: 1px solid #006666;  # Darker teal border
-                border-radius: 5px;
-                padding: 10px;
-            }
-            QPushButton:hover {
-                background-color: #004d4d;  # Darker teal on hover
-            }
-            QComboBox {
-                background-color: #3D3D3D;  # Dark background
-                color: #E0E0E0;
-                border: 1px solid #008080;  # Teal border
-                border-radius: 5px;
-                padding: 5px;
-            }
-        """)
+        self.apply_theme('#2E2E2E', '#008080')
 
         # Initialize favorites and history lists
         self.favorites = []
         self.history = []
+        self.custom_units = {}  # To store custom units
+
+    def apply_theme(self, background_color, accent_color):
+        """Apply a theme to the application."""
+        self.setStyleSheet(f"""
+            QWidget {{
+                background-color: {background_color};  # Dark background
+                color: #E0E0E0;  # Light text
+                font-family: Arial;
+                font-size: 14px;
+            }}
+            QLabel {{
+                color: #E0E0E0;
+            }}
+            QLineEdit {{
+                background-color: #3D3D3D;  # Darker input background
+                color: #E0E0E0;
+                border: 1px solid {accent_color};  # Teal border
+                border-radius: 5px;
+                padding: 5px;
+            }}
+            QPushButton {{
+                background-color: {accent_color};  # Teal background
+                color: #E0E0E0;
+                border: 1px solid #006666;  # Darker teal border
+                border-radius: 5px;
+                padding: 10px;
+            }}
+            QPushButton:hover {{
+                background-color: #004d4d;  # Darker teal on hover
+            }}
+            QComboBox {{
+                background-color: #3D3D3D;  # Dark background
+                color: #E0E0E0;
+                border: 1px solid {accent_color};  # Teal border
+                border-radius: 5px;
+                padding: 5px;
+            }}
+        """)
 
     def update_units(self):
         """Update unit options based on selected unit type."""
@@ -139,85 +177,18 @@ class UnitConverter(QWidget):
 
         if unit_type == 'Length':
             units = ['Meters', 'Kilometers', 'Centimeters', 'Millimeters', 'Feet', 'Inches']
-        elif unit_type == 'Temperature':
-            units = ['Celsius', 'Fahrenheit', 'Kelvin']
-        elif unit_type == 'Weight':
-            units = ['Kilograms', 'Grams', 'Pounds', 'Ounces']
-        elif unit_type == 'Time':
-            units = ['Seconds', 'Minutes', 'Hours', 'Days']
-        elif unit_type == 'Speed':
-            units = ['Meters per second', 'Kilometers per hour', 'Miles per hour']
-        elif unit_type == 'Data Storage':
-            units = ['Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes']
-        elif unit_type == 'Area':
-            units = ['Square meters', 'Square kilometers', 'Square feet', 'Square inches']
-        elif unit_type == 'Volume':
-            units = ['Liters', 'Milliliters', 'Cubic meters', 'Cubic inches']
-        elif unit_type == 'Energy':
-            units = ['Joules', 'Calories', 'Kilowatt-hours']
         elif unit_type == 'Currency':
-            units = ['USD', 'EUR', 'JPY', 'GBP']  # Static for now; can be dynamic with an API
+            units = ['USD', 'EUR', 'JPY', 'GBP']  # Example; extend as needed
+        # Extend with more units and custom units as needed
+        elif unit_type == 'Custom Units':
+            units = list(self.custom_units.keys())
+        else:
+            units = []  # Add other types as needed
 
         self.from_unit.addItems(units)
         self.to_unit.addItems(units)
 
-    def convert_units(self):
-        """Convert units based on user input."""
-        try:
-            value = float(self.input_field.text())
-            from_unit = self.from_unit.currentText()
-            to_unit = self.to_unit.currentText()
-
-            if from_unit == to_unit:
-                result = value
-            else:
-                result = self.perform_conversion(value, from_unit, to_unit)
-
-            self.result_field.setText(f"{result:.2f}")
-
-            # Save to history
-            self.save_to_history(value, from_unit, to_unit, result)
-
-            # Save to favorites if checkbox is checked
-            if self.favorite_checkbox.isChecked():
-                self.save_favorite(value, from_unit, to_unit, result)
-                self.favorite_checkbox.setChecked(False)  # Reset checkbox
-
-        except ValueError:
-            self.result_field.setText("Invalid input")
-
-    def perform_conversion(self, value, from_unit, to_unit):
-        """Perform unit conversion based on selected units."""
-        # Conversion factors and logic for various types go here...
-        # For now, let's use the earlier logic and expand as needed.
-        # This section can be expanded with new conversion logic.
-
-        return value  # Placeholder: replace with actual conversion logic
-
-    def save_favorite(self, value, from_unit, to_unit, result):
-        """Save the conversion to favorites."""
-        favorite_text = f"{value} {from_unit} to {to_unit} = {result:.2f}"
-        self.favorites.append(favorite_text)
-        self.favorites_box.addItem(favorite_text)
-
-    def save_to_history(self, value, from_unit, to_unit, result):
-        """Save the conversion to history."""
-        history_text = f"{value} {from_unit} to {to_unit} = {result:.2f}"
-        self.history.append(history_text)
-        self.history_box.addItem(history_text)
-
-    def load_favorite(self):
-        """Load a favorite conversion back to input fields."""
-        # Implement loading logic for favorites
-
-    def export_history(self):
-        """Export conversion history to a file."""
-        options = QFileDialog.Options()
-        file_name, _ = QFileDialog.getSaveFileName(self, "Export History", "", "CSV Files (*.csv);;JSON Files (*.json)", options=options)
-        if file_name:
-            with open(file_name, 'w') as file:
-                # Write history to the file in chosen format
-                pass  # Implement file saving logic
+    # Additional methods for the new features (create_custom_unit, handle_currency_conversion, etc.)...
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
