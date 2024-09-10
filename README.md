@@ -2,6 +2,17 @@
 
 The **Batman's Unit Converter** is a multi-functional application built using Python and PyQt5. It provides various unit conversion tools, advanced features like AI-based suggestions, scientific calculator integration, AR measurement capabilities, and macro recording for automated tasks. This application combines a user-friendly interface with robust functionality
 
+# Usage
+- Launch the application.
+- Select the type of conversion from the dropdown menu.
+- Enter the value to convert and choose the units.
+- Click the Convert button to see the result.
+- Use the Favorites feature to save conversions you use frequently.
+- Access advanced functionalities like AI suggestions, macro recording,  scientific calculator, and AR measurement through their respective buttons.
+Screenshot:
+![alt text](image.png)
+Check releases
+
 ## Features
 
 1. **Unit Conversion**
@@ -48,16 +59,6 @@ python main.py
 - Matplotlib
 - TensorFlow
 
-# Usage
-- Launch the application.
-- Select the type of conversion from the dropdown menu.
-- Enter the value to convert and choose the units.
-- Click the Convert button to see the result.
-- Use the Favorites feature to save conversions you use frequently.
-- Access advanced functionalities like AI suggestions, macro recording,  scientific calculator, and AR measurement through their respective buttons.
-Screenshot:
-![alt text](image.png)
-Check releases
 
 # Contributing
 Contributions are welcome! Please fork the repository and submit a pull request for any feature enhancements or bug fixes.
